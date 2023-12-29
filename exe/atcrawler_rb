@@ -1,0 +1,77 @@
+#!/usr/bin/env ruby
+
+require 'atcrawler_rb'
+require 'optparse'
+
+def main
+  options = {
+    :contest => nil,
+    :username => "",
+    :language => "",
+    :task => "",
+    :result => "",
+    :orderby => nil,
+    :descending => false,
+    :maxsubmissions => 20
+  }
+  OptionParser.new do |opts|
+    opts.banner = "Usage: atcrawler_rb (init|crawl) [options]"
+    opts.on("-c CONTEST", "--contest CONTEST", String, "Specify the AtCoder contest.") do |contest|
+      options[:contest] = contest
+    end
+    opts.on("-u USERNAME", "--username USERNAME", String, "Specify the username to collect submission codes.") do |username|
+      options[:username] = username
+    end
+    opts.on("-l LANGUAGE", "--language LANGUAGE", String, "Specify the language of the code to be collected.") do |language|
+      options[:language] = language
+    end
+    task_choise =('a'..'z').to_a
+    opts.on("-t TASK", "--task TASK", task_choise, "Specify the task of the code to be collected. #{task_choise}") do |task|
+      options[:task] = task
+    end
+    result_choise = ["AC", "RE", "WA", "TLE", "MLE", "CE", "QLE", "OLE", "IE", "WJ", "WR", "Judging"]
+    opts.on("-r RESULT", "--result RESULT", result_choise, "Specify the result of the code to be collected. #{result_choise}") do |result|
+      options[:result] = result
+    end
+    order_choise = ["created", "score", "source_length", "time_consumption", "memory_consumption"]
+    opts.on("-o ORDERBY", "--orderby ORDERBY", order_choise, "Specify the ordering method of the submission. #{order_choise}") do |orderby|
+      options[:orderby] = orderby
+    end
+    opts.on("-d", "--descending", "Specify if in descending order.") do
+      options[:descending] = true
+    end
+    opts.on("-m MAXSUBMISSIONS", "--maxsubmissions MAXSUBMISSIONS", Integer, "Specify the max submissions to collet.") do |maxsubmissions|
+      options[:maxsubmissions] = maxsubmissions
+    end
+    opts.parse!(ARGV)
+  end
+
+  mode = nil
+  if ARGV.include?("init")
+    mode = :init
+  elsif ARGV.include?("crawl")
+    mode = :crawl
+  else
+    raise OptionParser::MissingArgument.new("Operation mode is not specified.")
+  end
+
+  if not options[:contest]
+    raise OptionParser::MissingArgument.new("Contest is not specified.")
+  end
+
+  session = AtcrawlerRb::AtCoderSession.new
+  if mode == :init
+    env = AtcrawlerRb::EnvironmentInitializer.new(session, options[:contest])
+    env.build
+  else
+    collector = AtcrawlerRb::SubmissionCollector.new(session, options[:contest])
+    collector.build
+    collector.collect(
+      task: options[:task], username: options[:username],
+      language: options[:language], result: options[:result],
+      orderby: options[:orderby], descending: options[:descending],
+      maxsubmissions: options[:maxsubmissions])
+  end
+end
+
+main()
