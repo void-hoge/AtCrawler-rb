@@ -50,9 +50,9 @@ module AtcrawlerRb
 
     def login
       print 'username: '
-      username = gets.chomp
+      username = $stdin.gets.chomp
       print 'password: '
-      password = STDIN.noecho(&:gets).chomp
+      password = $stdin.noecho(&:gets).chomp
 
       page = self.get('https://atcoder.jp/login')
       form = page.forms[1]
